@@ -4,6 +4,7 @@ import numpy as np
 
 layers = 2
 leafCellsNr = int(np.power(4, layers))
+distributions =['normal', 'normal']
 
 
 class Layer:
@@ -14,20 +15,41 @@ class Layer:
 
 
 class Cell:
-    def __init__(self, min_vals, max_vals):
+    def __init__(self, min_vals, max_vals, distributions):
         self.min_values = min_vals
         self.max_values = max_vals
+        self.mean_values = None
+        self.distributions = distributions
         self.parent_cell = None
         self.child_cells = None
 
 
 def create_leaf_layer(min_vals, max_vals, leavesCellNr):
-    cell_size = (max_vals - min_vals) / (int(np.sqrt(leavesCellNr)))
-    vec_x, vec_y = np.array([cell_size[0], 0.0]), np.array([0.0, cell_size[1]])
+    "Returns leaf-layer of grid structure by given number of cells and initial min and maximum values in each dimension"
 
-    for leaf_y in range(int(np.sqrt(leavesCellNr))):
-        for leaf_x in range( int(np.sqrt(leavesCellNr))):
-            cell = Cell(np.sum([min_vals, (leaf_x)*vec_x, leaf_y*vec_y], axis=0), np.sum([min_vals, (leaf_x+1)*vec_x, (1+leaf_y)*vec_y], axis=0))
+    # indicate the number of dimensions
+    n_dim = len(min_vals)
+    n_grid = int(np.power(leavesCellNr, 1./n_dim))
+
+    # get cell size in each dimension
+    cell_size = (max_vals - min_vals)/n_grid
+
+    #indicate the number of dimensions
+    n_dim = cell_size.shape[0]
+
+    #get all dimensions vector to move across the space
+    grid_vecs = np.zeros((n_dim, n_dim))
+    np.fill_diagonal(grid_vecs, cell_size)
+
+    vec_x, vec_y = np.array([cell_size[0], 0.0]), np.array([0.0, cell_size[1]])
+    print vec_x, vec_y
+
+    #TODO: implement dimensionality invariance
+    for leaf_y in range(n_grid):
+        for leaf_x in range(n_grid):
+            cell = Cell(min_vals=np.sum([min_vals, (leaf_x)*grid_vecs[0], leaf_y*vec_y], axis=0),
+                        max_vals=np.sum([min_vals, (leaf_x+1)*vec_x, (1+leaf_y)*grid_vecs[1]], axis=0),
+                        distributions=distributions)
 
             print cell.min_values, cell.max_values
 
